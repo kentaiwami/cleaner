@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sensor-api-cleaner
+  namespace: cleaner
+spec:
+  schedule: "0 3 * * *"  # 毎日 12:00 JST (UTC 03:00)
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: sensor-api-cleaner
+              image: __REGISTRY_HOST__:5000/sensor-api-cleaner:__IMAGE_TAG__
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
+                limits:
+                  cpu: 200m
+                  memory: 64Mi
+              env:
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: cleaner-secret
+                      key: database-url
