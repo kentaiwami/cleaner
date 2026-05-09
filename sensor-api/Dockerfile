@@ -3,9 +3,8 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN go build -o cleaner .
+RUN for dir in ./cmd/*/; do go build -o /out/$(basename $dir) $dir; done
 
 FROM alpine:3.19
 WORKDIR /app
-COPY --from=builder /app/cleaner .
-CMD ["./cleaner"]
+COPY --from=builder /out/ .
