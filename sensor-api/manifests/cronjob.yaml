@@ -12,7 +12,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: sensor-api-cleaner
-              image: __REGISTRY_HOST__:5000/sensor-api-cleaner:__IMAGE_TAG__
+              image: __REGISTRY_HOST__:5000/cleaner:__IMAGE_TAG__
               command: ["./delete-old-data"]
               resources:
                 requests:

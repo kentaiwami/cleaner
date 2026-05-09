@@ -1,4 +1,4 @@
-name: Deploy sensor-api-cleaner to k3s
+name: Deploy cleaner to k3s
 
 on:
   push:
@@ -18,10 +18,10 @@ jobs:
           REGISTRY_HOST: ${{ secrets.REGISTRY_HOST }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t ${REGISTRY_HOST}:5000/sensor-api-cleaner:${IMAGE_TAG} sensor-api/
-          docker tag ${REGISTRY_HOST}:5000/sensor-api-cleaner:${IMAGE_TAG} ${REGISTRY_HOST}:5000/sensor-api-cleaner:latest
-          docker push ${REGISTRY_HOST}:5000/sensor-api-cleaner:${IMAGE_TAG}
-          docker push ${REGISTRY_HOST}:5000/sensor-api-cleaner:latest
+          docker build -t ${REGISTRY_HOST}:5000/cleaner:${IMAGE_TAG} sensor-api/
+          docker tag ${REGISTRY_HOST}:5000/cleaner:${IMAGE_TAG} ${REGISTRY_HOST}:5000/cleaner:latest
+          docker push ${REGISTRY_HOST}:5000/cleaner:${IMAGE_TAG}
+          docker push ${REGISTRY_HOST}:5000/cleaner:latest
 
       - name: Deploy to k3s
         env:
@@ -38,11 +38,11 @@ jobs:
         run: |
           curl -s -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
             -H 'Content-Type: application/json' \
-            -d '{"text":"✅ sensor-api-cleaner deploy succeeded: `${{ github.ref_name }}` @ `${{ github.sha }}`"}'
+            -d '{"text":"✅ cleaner deploy succeeded: `${{ github.ref_name }}` @ `${{ github.sha }}`"}'
 
       - name: Notify Slack on failure
         if: failure()
         run: |
           curl -s -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
             -H 'Content-Type: application/json' \
-            -d '{"text":"❌ sensor-api-cleaner deploy failed: `${{ github.ref_name }}` @ `${{ github.sha }}`"}'
+            -d '{"text":"❌ cleaner deploy failed: `${{ github.ref_name }}` @ `${{ github.sha }}`"}'
