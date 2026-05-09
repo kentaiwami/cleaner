@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: sensor-api-cleaner
+  name: delete-old-data
   namespace: cleaner
 spec:
   schedule: "0 3 * * *"  # 毎日 12:00 JST (UTC 03:00)
@@ -11,7 +11,7 @@ spec:
         spec:
           restartPolicy: OnFailure
           containers:
-            - name: sensor-api-cleaner
+            - name: delete-old-data
               image: __REGISTRY_HOST__:5000/cleaner:__IMAGE_TAG__
               command: ["./delete-old-data"]
               resources:
