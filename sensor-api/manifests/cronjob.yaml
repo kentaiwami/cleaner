@@ -12,7 +12,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: delete-old-data
-              image: __REGISTRY_HOST__:5000/cleaner:__IMAGE_TAG__
+              image: __REGISTRY_HOST__:5000/cleaner-sensor-api:__IMAGE_TAG__
               command: ["./delete-old-data"]
               resources:
                 requests:
@@ -42,7 +42,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: delete-humidity-outliers
-              image: __REGISTRY_HOST__:5000/cleaner:__IMAGE_TAG__
+              image: __REGISTRY_HOST__:5000/cleaner-sensor-api:__IMAGE_TAG__
               command: ["./delete-humidity-outliers"]
               resources:
                 requests:

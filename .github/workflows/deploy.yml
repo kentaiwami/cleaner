@@ -17,11 +17,12 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           for dir in */; do
-            [ -f "$dir/Dockerfile" ] || continue
-            docker build -t ${REGISTRY_HOST}:5000/${dir%/}:${IMAGE_TAG} ${dir}
-            docker tag ${REGISTRY_HOST}:5000/${dir%/}:${IMAGE_TAG} ${REGISTRY_HOST}:5000/${dir%/}:latest
-            docker push ${REGISTRY_HOST}:5000/${dir%/}:${IMAGE_TAG}
-            docker push ${REGISTRY_HOST}:5000/${dir%/}:latest
+            [ -f "${dir}Dockerfile" ] || continue
+            name="cleaner-${dir%/}"
+            docker build -t ${REGISTRY_HOST}:5000/${name}:${IMAGE_TAG} ${dir}
+            docker tag ${REGISTRY_HOST}:5000/${name}:${IMAGE_TAG} ${REGISTRY_HOST}:5000/${name}:latest
+            docker push ${REGISTRY_HOST}:5000/${name}:${IMAGE_TAG}
+            docker push ${REGISTRY_HOST}:5000/${name}:latest
           done
 
       - name: Deploy to k3s
