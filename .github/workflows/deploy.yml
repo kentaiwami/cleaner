@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'sensor-api/**'
 
 jobs:
   deploy:
@@ -13,15 +11,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build and push Docker image
+      - name: Build and push Docker images
         env:
           REGISTRY_HOST: ${{ secrets.REGISTRY_HOST }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t ${REGISTRY_HOST}:5000/cleaner:${IMAGE_TAG} sensor-api/
-          docker tag ${REGISTRY_HOST}:5000/cleaner:${IMAGE_TAG} ${REGISTRY_HOST}:5000/cleaner:latest
-          docker push ${REGISTRY_HOST}:5000/cleaner:${IMAGE_TAG}
-          docker push ${REGISTRY_HOST}:5000/cleaner:latest
+          for dir in */; do
+            [ -f "$dir/Dockerfile" ] || continue
+            docker build -t ${REGISTRY_HOST}:5000/${dir%/}:${IMAGE_TAG} ${dir}
+            docker tag ${REGISTRY_HOST}:5000/${dir%/}:${IMAGE_TAG} ${REGISTRY_HOST}:5000/${dir%/}:latest
+            docker push ${REGISTRY_HOST}:5000/${dir%/}:${IMAGE_TAG}
+            docker push ${REGISTRY_HOST}:5000/${dir%/}:latest
+          done
 
       - name: Deploy to k3s
         env:
@@ -29,9 +30,12 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           sudo kubectl create namespace cleaner --dry-run=client -o yaml | sudo kubectl apply -f -
-          sed -e "s|__REGISTRY_HOST__|${REGISTRY_HOST}|g" \
-              -e "s|__IMAGE_TAG__|${IMAGE_TAG}|g" \
-              sensor-api/manifests/cronjob.yaml | sudo kubectl apply -f - -n cleaner
+          for dir in */; do
+            [ -f "${dir}manifests/cronjob.yaml" ] || continue
+            sed -e "s|__REGISTRY_HOST__|${REGISTRY_HOST}|g" \
+                -e "s|__IMAGE_TAG__|${IMAGE_TAG}|g" \
+                ${dir}manifests/cronjob.yaml | sudo kubectl apply -f - -n cleaner
+          done
 
       - name: Notify Slack on success
         if: success()
