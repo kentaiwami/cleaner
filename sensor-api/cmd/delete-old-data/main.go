@@ -27,7 +27,7 @@ func main() {
 		log.Fatal("cannot connect to db:", err)
 	}
 
-	tables := []string{"temperatures", "humidities", "co2s", "smells"}
+	tables := []string{"temperatures", "humidities", "co2s", "smells", "ble_rssi", "presence_logs"}
 	for _, table := range tables {
 		res, err := db.Exec("DELETE FROM "+table+" WHERE recorded_at < NOW() - INTERVAL 7 DAY")
 		if err != nil {
