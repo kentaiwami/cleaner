@@ -31,7 +31,7 @@ spec:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: delete-humidity-outliers
+  name: delete-sensor-outliers
   namespace: cleaner
 spec:
   schedule: "* * * * *"  # 毎分
@@ -41,9 +41,9 @@ spec:
         spec:
           restartPolicy: OnFailure
           containers:
-            - name: delete-humidity-outliers
+            - name: delete-sensor-outliers
               image: __REGISTRY_HOST__:5000/cleaner-sensor-api:__IMAGE_TAG__
-              command: ["./delete-humidity-outliers"]
+              command: ["./delete-sensor-outliers"]
               resources:
                 requests:
                   cpu: 50m

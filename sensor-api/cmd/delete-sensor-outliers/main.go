@@ -27,12 +27,18 @@ func main() {
 		log.Fatal("cannot connect to db:", err)
 	}
 
+	for _, table := range []string{"humidities", "temperatures"} {
+		deleteOutliers(db, table)
+	}
+}
+
+func deleteOutliers(db *sql.DB, table string) {
 	rows, err := db.Query(`
 		SELECT h.id, h.sensor_id, h.value, h.recorded_at
-		FROM humidities h
+		FROM `+table+` h
 		JOIN (
 			SELECT sensor_id, AVG(value) AS avg_val, STDDEV(value) AS std_val
-			FROM humidities
+			FROM `+table+`
 			WHERE recorded_at >= NOW() - INTERVAL 1 HOUR
 			GROUP BY sensor_id
 		) stats ON h.sensor_id = stats.sensor_id
@@ -41,7 +47,7 @@ func main() {
 			OR h.value > stats.avg_val + 3 * stats.std_val)
 	`)
 	if err != nil {
-		log.Fatal("failed to query outliers:", err)
+		log.Fatalf("failed to query outliers from %s: %v", table, err)
 	}
 	defer rows.Close()
 
@@ -52,25 +58,25 @@ func main() {
 		if err := rows.Scan(&id, &sensorID, &value, &recordedAt); err != nil {
 			log.Fatal(err)
 		}
-		log.Printf("outlier: id=%d sensor_id=%s value=%s recorded_at=%s", id, sensorID, value, recordedAt)
+		log.Printf("outlier: table=%s id=%d sensor_id=%s value=%s recorded_at=%s", table, id, sensorID, value, recordedAt)
 		ids = append(ids, id)
 	}
 
 	if len(ids) == 0 {
-		log.Println("no outliers found")
+		log.Printf("no outliers found in %s", table)
 		return
 	}
 
 	res, err := db.Exec(`
-		DELETE FROM humidities
+		DELETE FROM ` + table + `
 		WHERE recorded_at >= NOW() - INTERVAL 1 HOUR
 		AND id IN (
 			SELECT id FROM (
 				SELECT h.id
-				FROM humidities h
+				FROM ` + table + ` h
 				JOIN (
 					SELECT sensor_id, AVG(value) AS avg_val, STDDEV(value) AS std_val
-					FROM humidities
+					FROM ` + table + `
 					WHERE recorded_at >= NOW() - INTERVAL 1 HOUR
 					GROUP BY sensor_id
 				) stats ON h.sensor_id = stats.sensor_id
@@ -81,8 +87,8 @@ func main() {
 		)
 	`)
 	if err != nil {
-		log.Fatal("failed to delete outliers:", err)
+		log.Fatalf("failed to delete outliers from %s: %v", table, err)
 	}
 	n, _ := res.RowsAffected()
-	log.Printf("deleted %d outlier rows from humidities", n)
+	log.Printf("deleted %d outlier rows from %s", n, table)
 }
